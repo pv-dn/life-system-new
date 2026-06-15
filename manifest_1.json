@@ -1,0 +1,22 @@
+{
+  "name": "ライフクリーニング納品書発行システム",
+  "short_name": "ライフクリーニング",
+  "description": "株式会社プゥル・ヴー ホワイト事業部 納品書発行システム",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f0f7f2",
+  "theme_color": "#1a5c30",
+  "orientation": "landscape",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
