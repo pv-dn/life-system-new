@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ライフクリーニング 納品書発行システム</title>
+<style>
+  :root {
+    --bg: #f5f6f8;
+    --surface: #ffffff;
+    --border: #e2e5ea;
+    --primary: #2563a8;
+    --primary-dark: #1a4a82;
+    --primary-light: #dbeafe;
+    --accent: #0ea5a0;
+    --danger: #dc2626;
+    --text: #1e2430;
+    --text-sub: #6b7280;
+    --shadow: 0 2px 8px rgba(0,0,0,0.08);
+    --radius: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Hiragino Sans', 'Meiryo', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    min-height: 100vh;
+  }
+
+  /* ===== ログイン画面 ===== */
+  #login-screen {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1a4a82 0%, #2563a8 50%, #0ea5a0 100%);
+  }
+
+  .login-card {
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 40px;
+    width: 360px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  }
+
+  .login-logo {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+
+  .login-logo .company {
+    font-size: 12px;
+    color: var(--text-sub);
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+  }
+
+  .login-logo .title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--primary);
+    line-height: 1.4;
+  }
+
+  .login-logo .subtitle {
+    font-size: 11px;
+    color: var(--text-sub);
+    margin-top: 2px;
+  }
+
+  .login-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 20px 0;
+  }
+
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-sub);
+    margin-bottom: 6px;
+    letter-spacing: 0.04em;
+  }
+
+  .form-group input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--text);
+    background: var(--surface);
+    transition: border-color 0.2s;
+    outline: none;
+  }
+
+  .form-group input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light);
+  }
+
+  .btn-primary {
+    width: 100%;
+    padding: 12px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    font-family: inherit;
+    margin-top: 4px;
+  }
+
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-primary:active { transform: scale(0.98); }
+
+  .login-error {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: var(--danger);
+    padding: 10px 12px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    margin-top: 12px;
+    display: none;
+    text-align: center;
+  }
+
+  /* ===== メイン画面 ===== */
+  #main-screen { display: none; }
+
+  .header {
+    background: var(--primary);
+    color: white;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 52px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+
+  .header-title {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .header-btn {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.25);
+    color: white;
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.2s;
+  }
+
+  .header-btn:hover { background: rgba(255,255,255,0.25); }
+
+  .header-user {
+    font-size: 12px;
+    opacity: 0.85;
+    padding: 0 4px;
+  }
+
+  .tab-bar {
+    background: var(--surface);
+    border-bottom: 2px solid var(--border);
+    display: flex;
+    padding: 0 16px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .tab-bar::-webkit-scrollbar { display: none; }
+
+  .tab-btn {
+    padding: 14px 18px;
+    border: none;
+    background: none;
+    color: var(--text-sub);
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    transition: color 0.2s, border-color 0.2s;
+    font-weight: 500;
+  }
+
+  .tab-btn:hover { color: var(--primary); }
+
+  .tab-btn.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+    font-weight: 700;
+  }
+
+  .tab-content {
+    display: none;
+    padding: 24px 20px;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  .tab-content.active { display: block; }
+
+  .card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+  }
+
+  .card-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-sub);
+    letter-spacing: 0.05em;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .placeholder {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-sub);
+  }
+
+  .placeholder .icon { font-size: 40px; margin-bottom: 12px; }
+  .placeholder .text { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+  .placeholder .sub { font-size: 12px; }
+
+  /* モーダル */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 28px;
+    width: 440px;
+    max-width: 90vw;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  }
+
+  .modal-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: var(--text);
+  }
+
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .btn-secondary {
+    padding: 9px 18px;
+    background: none;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 13px;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--text);
+    transition: background 0.2s;
+  }
+
+  .btn-secondary:hover { background: var(--bg); }
+
+  /* ユーザー一覧 */
+  .user-list { margin-bottom: 16px; }
+
+  .user-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 8px;
+    background: var(--bg);
+  }
+
+  .user-item .user-name { font-weight: 600; font-size: 13px; }
+  .user-item .user-role { font-size: 11px; color: var(--text-sub); margin-top: 2px; }
+
+  .user-item-actions { display: flex; gap: 6px; }
+
+  .btn-icon {
+    background: none;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    color: var(--text-sub);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-family: inherit;
+  }
+
+  .btn-icon:hover { background: var(--border); }
+  .btn-icon.danger:hover { background: #fef2f2; color: var(--danger); border-color: #fecaca; }
+
+  /* 履歴 */
+  .history-list { max-height: 320px; overflow-y: auto; }
+
+  .history-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+
+  .history-item:last-child { border-bottom: none; }
+  .history-item .h-user { font-weight: 600; }
+  .history-item .h-time { color: var(--text-sub); font-size: 12px; }
+
+  /* トースト */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: #1e2430;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 500;
+    z-index: 300;
+    transition: transform 0.3s ease;
+    pointer-events: none;
+  }
+
+  .toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- ===== ログイン画面 ===== -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="company">株式会社プゥル・ヴー ホワイト事業部</div>
+      <div class="title">ライフクリーニング<br>納品書発行システム</div>
+      <div class="subtitle">v2.0</div>
+    </div>
+    <hr class="login-divider">
+    <div class="form-group">
+      <label>パスワード</label>
+      <input type="password" id="login-password" placeholder="パスワードを入力" autocomplete="current-password">
+    </div>
+    <button class="btn-primary" onclick="doLogin()">ログイン</button>
+    <div class="login-error" id="login-error">パスワードが違います</div>
+  </div>
+</div>
+
+<!-- ===== メイン画面 ===== -->
+<div id="main-screen">
+  <div class="header">
+    <div class="header-title">ライフクリーニング納品書</div>
+    <div class="header-actions">
+      <span class="header-user" id="header-user-label"></span>
+      <button class="header-btn" onclick="openLoginHistory()">📋 ログイン履歴</button>
+      <button class="header-btn" id="admin-btn" onclick="openAdminModal()" style="display:none">⚙ 管理設定</button>
+      <button class="header-btn" onclick="doLogout()">🚪 ログアウト</button>
+    </div>
+  </div>
+
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('tab-slip', this)">📋 伝票発行</button>
+    <button class="tab-btn" onclick="switchTab('tab-master', this)">🗂 マスタ管理</button>
+    <button class="tab-btn" onclick="switchTab('tab-history', this)">🕐 発行履歴</button>
+    <button class="tab-btn" onclick="switchTab('tab-output', this)">📊 出力</button>
+    <button class="tab-btn" onclick="switchTab('tab-backup', this)">💾 バックアップ</button>
+    <button class="tab-btn" onclick="switchTab('tab-guide', this)">📖 使い方</button>
+  </div>
+
+  <div id="tab-slip" class="tab-content active">
+    <div class="placeholder">
+      <div class="icon">📋</div>
+      <div class="text">伝票発行</div>
+      <div class="sub">Step 2 で実装予定</div>
+    </div>
+  </div>
+
+  <div id="tab-master" class="tab-content">
+    <div class="placeholder">
+      <div class="icon">🗂</div>
+      <div class="text">マスタ管理</div>
+      <div class="sub">Step 3 で実装予定</div>
+    </div>
+  </div>
+
+  <div id="tab-history" class="tab-content">
+    <div class="placeholder">
+      <div class="icon">🕐</div>
+      <div class="text">発行履歴</div>
+      <div class="sub">Step 4 で実装予定</div>
+    </div>
+  </div>
+
+  <div id="tab-output" class="tab-content">
+    <div class="placeholder">
+      <div class="icon">📊</div>
+      <div class="text">出力</div>
+      <div class="sub">Step 4 で実装予定</div>
+    </div>
+  </div>
+
+  <div id="tab-backup" class="tab-content">
+    <div class="placeholder">
+      <div class="icon">💾</div>
+      <div class="text">バックアップ</div>
+      <div class="sub">Step 5 で実装予定</div>
+    </div>
+  </div>
+
+  <div id="tab-guide" class="tab-content">
+    <div class="card">
+      <div class="card-title">📖 使い方ガイド</div>
+      <p style="line-height:1.8; color:var(--text-sub);">各タブの機能は順次実装予定です。</p>
+    </div>
+  </div>
+</div>
+
+<!-- 管理設定モーダル -->
+<div class="modal-overlay" id="admin-modal">
+  <div class="modal" style="width:500px">
+    <div class="modal-title">⚙ 管理設定</div>
+    <div class="card-title">ユーザー管理</div>
+    <div class="user-list" id="user-list"></div>
+    <button class="btn-primary" style="width:auto;padding:8px 16px;font-size:13px;margin-bottom:4px;" onclick="openAddUserModal()">＋ ユーザー追加</button>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('admin-modal')">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- ユーザー追加モーダル -->
+<div class="modal-overlay" id="add-user-modal">
+  <div class="modal">
+    <div class="modal-title">ユーザー追加</div>
+    <div class="form-group">
+      <label>ユーザー名</label>
+      <input type="text" id="new-user-name" placeholder="例：田中">
+    </div>
+    <div class="form-group">
+      <label>パスワード</label>
+      <input type="password" id="new-user-pw" placeholder="パスワード">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('add-user-modal')">キャンセル</button>
+      <button class="btn-primary" style="width:auto;padding:9px 20px;" onclick="addUser()">追加</button>
+    </div>
+  </div>
+</div>
+
+<!-- パスワード変更モーダル -->
+<div class="modal-overlay" id="change-pw-modal">
+  <div class="modal">
+    <div class="modal-title" id="change-pw-title">パスワード変更</div>
+    <div class="form-group">
+      <label>現在のパスワード</label>
+      <input type="password" id="old-pw" placeholder="現在のパスワード">
+    </div>
+    <div class="form-group">
+      <label>新しいパスワード</label>
+      <input type="password" id="new-pw" placeholder="新しいパスワード">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('change-pw-modal')">キャンセル</button>
+      <button class="btn-primary" style="width:auto;padding:9px 20px;" onclick="changePassword()">変更</button>
+    </div>
+  </div>
+</div>
+
+<!-- ログイン履歴モーダル -->
+<div class="modal-overlay" id="login-history-modal">
+  <div class="modal">
+    <div class="modal-title">📋 ログイン履歴</div>
+    <div class="history-list" id="login-history-list"></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('login-history-modal')">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== データ =====
+const KEYS = {
+  users: 'pvw_users_v2',
+  loginHistory: 'pvw_loginhistory_v2',
+};
+
+function loadData(key, def) {
+  try { return JSON.parse(localStorage.getItem(key)) ?? def; } catch { return def; }
+}
+
+function saveData(key, data) {
+  localStorage.setItem(key, JSON.stringify(data));
+}
+
+function initData() {
+  if (!loadData(KEYS.users, null)) {
+    saveData(KEYS.users, [
+      { id: 'admin', name: 'admin', password: 'admin1234', role: 'admin' }
+    ]);
+  }
+}
+
+// ===== ログイン =====
+let currentUser = null;
+let changePwTargetId = null; // 管理者が変更対象ユーザーを指定するとき
+
+function doLogin() {
+  const pw = document.getElementById('login-password').value;
+  const users = loadData(KEYS.users, []);
+
+  // パスワードが重複している場合は最初にヒットしたユーザー
+  const user = users.find(u => u.password === pw);
+
+  if (!user) {
+    document.getElementById('login-error').style.display = 'block';
+    return;
+  }
+
+  document.getElementById('login-error').style.display = 'none';
+  currentUser = user;
+
+  // ログイン履歴（admin は記録しない）
+  if (user.role !== 'admin') {
+    const history = loadData(KEYS.loginHistory, []);
+    history.unshift({ user: user.name, time: new Date().toISOString() });
+    if (history.length > 100) history.pop();
+    saveData(KEYS.loginHistory, history);
+  }
+
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('main-screen').style.display = 'block';
+  document.getElementById('header-user-label').textContent = user.name;
+  document.getElementById('admin-btn').style.display = user.role === 'admin' ? '' : 'none';
+}
+
+document.getElementById('login-password').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+
+function doLogout() {
+  currentUser = null;
+  document.getElementById('main-screen').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-password').value = '';
+}
+
+// ===== タブ =====
+function switchTab(tabId, btn) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(tabId).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ===== モーダル =====
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) overlay.classList.remove('open');
+  });
+});
+
+// ===== 管理設定 =====
+function openAdminModal() {
+  renderUserList();
+  document.getElementById('admin-modal').classList.add('open');
+}
+
+function renderUserList() {
+  const users = loadData(KEYS.users, []);
+  const list = document.getElementById('user-list');
+  list.innerHTML = '';
+  users.forEach(u => {
+    const div = document.createElement('div');
+    div.className = 'user-item';
+    div.innerHTML = `
+      <div>
+        <div class="user-name">${u.name}</div>
+        <div class="user-role">${u.role === 'admin' ? '管理者' : '一般ユーザー'}</div>
+      </div>
+      <div class="user-item-actions">
+        <button class="btn-icon" onclick="openChangePwModal('${u.id}', '${u.name}')">🔑 PW変更</button>
+        ${u.role !== 'admin' ? `<button class="btn-icon danger" onclick="deleteUser('${u.id}')">🗑 削除</button>` : ''}
+      </div>
+    `;
+    list.appendChild(div);
+  });
+}
+
+function openAddUserModal() {
+  document.getElementById('new-user-name').value = '';
+  document.getElementById('new-user-pw').value = '';
+  document.getElementById('add-user-modal').classList.add('open');
+}
+
+function addUser() {
+  const name = document.getElementById('new-user-name').value.trim();
+  const pw = document.getElementById('new-user-pw').value;
+  if (!name || !pw) { showToast('名前とパスワードを入力してください'); return; }
+
+  const users = loadData(KEYS.users, []);
+
+  // パスワード重複チェック
+  if (users.find(u => u.password === pw)) {
+    showToast('そのパスワードはすでに使われています');
+    return;
+  }
+
+  users.push({ id: 'user_' + Date.now(), name, password: pw, role: 'user' });
+  saveData(KEYS.users, users);
+  renderUserList();
+  closeModal('add-user-modal');
+  showToast(`${name} を追加しました`);
+}
+
+function deleteUser(id) {
+  if (!confirm('このユーザーを削除しますか？')) return;
+  let users = loadData(KEYS.users, []);
+  users = users.filter(u => u.id !== id);
+  saveData(KEYS.users, users);
+  renderUserList();
+  showToast('ユーザーを削除しました');
+}
+
+// ===== パスワード変更 =====
+// 管理者がユーザーのPWを変更 or 本人が自分のPWを変更
+function openChangePwModal(userId, userName) {
+  changePwTargetId = userId;
+  document.getElementById('change-pw-title').textContent =
+    userId === currentUser.id ? 'パスワード変更' : `${userName} のパスワード変更`;
+  document.getElementById('old-pw').value = '';
+  document.getElementById('new-pw').value = '';
+
+  // 管理者が他ユーザーのPWを変える場合は「現在のPW」欄を非表示
+  const oldPwGroup = document.getElementById('old-pw').closest('.form-group');
+  oldPwGroup.style.display = (currentUser.role === 'admin' && userId !== currentUser.id) ? 'none' : '';
+
+  document.getElementById('change-pw-modal').classList.add('open');
+}
+
+function changePassword() {
+  const newPw = document.getElementById('new-pw').value;
+  if (!newPw) { showToast('新しいパスワードを入力してください'); return; }
+
+  const users = loadData(KEYS.users, []);
+
+  // パスワード重複チェック（自分自身は除く）
+  if (users.find(u => u.id !== changePwTargetId && u.password === newPw)) {
+    showToast('そのパスワードはすでに使われています');
+    return;
+  }
+
+  const isSelf = changePwTargetId === currentUser.id;
+  const idx = users.findIndex(u => u.id === changePwTargetId);
+
+  // 本人変更時は現在のPWを確認
+  if (isSelf || currentUser.role !== 'admin') {
+    const oldPw = document.getElementById('old-pw').value;
+    if (users[idx].password !== oldPw) {
+      showToast('現在のパスワードが違います');
+      return;
+    }
+  }
+
+  users[idx].password = newPw;
+  if (isSelf) currentUser.password = newPw;
+  saveData(KEYS.users, users);
+  renderUserList();
+  closeModal('change-pw-modal');
+  showToast('パスワードを変更しました');
+}
+
+// ===== ログイン履歴 =====
+function openLoginHistory() {
+  const history = loadData(KEYS.loginHistory, []);
+  const list = document.getElementById('login-history-list');
+  if (history.length === 0) {
+    list.innerHTML = '<div style="text-align:center;color:var(--text-sub);padding:24px;">履歴がありません</div>';
+  } else {
+    list.innerHTML = history.map(h => {
+      const d = new Date(h.time);
+      const fmt = `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+      return `<div class="history-item"><span class="h-user">${h.user}</span><span class="h-time">${fmt}</span></div>`;
+    }).join('');
+  }
+  document.getElementById('login-history-modal').classList.add('open');
+}
+
+// ===== トースト =====
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ===== 起動 =====
+initData();
+</script>
+</body>
+</html>
